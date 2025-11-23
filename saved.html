@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Saved Adventures - AdventureHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo"><img src="images/adventure (2).png" height="100px" width="100px"></a>
+            <ul>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <ul id="mobileMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="location.html">Adventures</a></li>
+                <li><a href="aboutUs.html">About</a></li>
+                <li><a href="saved.html" class="active">My Saved (<span id="savedCount">0</span>)</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="signup.html">Sign Up</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>❤️ My Saved Adventures</h1>
+        <p>Your personal collection of favorite outdoor experiences</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon">📍</div>
+            <div class="stat-value" id="totalSaved">0</div>
+            <div class="stat-label">Saved Adventures</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🌍</div>
+            <div class="stat-value" id="uniqueRegions">0</div>
+            <div class="stat-label">Regions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-value" id="uniqueActivities">0</div>
+            <div class="stat-label">Activity Types</div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="results-header" id="resultsHeader" style="display: none;">
+            <div class="results-count">
+                <strong id="resultCount">0</strong> saved adventures
+            </div>
+            <div class="action-buttons">
+                <button class="btn-clear" onclick="clearAllSaved()">Clear All</button>
+                <a href="location.html" class="btn-explore">Explore More</a>
+            </div>
+        </div>
+
+        <div class="adventure-grid" id="adventureGrid">
+            <!-- Adventures will be dynamically inserted here -->
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">💔</div>
+            <h3>No Saved Adventures Yet</h3>
+            <p>Start exploring and save your favorite adventures to see them here!</p>
+            <a href="location.html" class="btn-explore">Explore Adventures</a>
+        </div>
+    </div>
+
+    <script>
+        // Adventure data - same as main page
+        const adventures = [
+            {
+                id: 1,
+                title: "Adirondack High Peaks Challenge",
+                region: "capital-saratoga",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Lake Placid, NY",
+                description: "Conquer the 46 High Peaks of the Adirondacks with stunning mountain views.",
+                groupSize: "6-10",
+                season: "summer",
+                icon: "🏔️",
+                badge: "Popular"
+            },
+            {
+                id: 2,
+                title: "Saratoga Spa State Park Trail",
+                region: "capital-saratoga",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Saratoga Springs, NY",
+                description: "Explore scenic trails through historic mineral springs and peaceful woodlands.",
+                groupSize: "8-15",
+                season: "spring",
+                icon: "🌲",
+                badge: "Relaxing"
+            },
+            {
+                id: 3,
+                title: "Hudson River Kayaking",
+                region: "capital-saratoga",
+                activity: "water",
+                difficulty: "moderate",
+                location: "Troy, NY",
+                description: "Paddle along the historic Hudson River with beautiful shoreline views.",
+                groupSize: "6-12",
+                season: "summer",
+                icon: "🚣",
+                badge: "Scenic"
+            },
+            {
+                id: 4,
+                title: "Green Lakes State Park Trail",
+                region: "central-ny",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Fayetteville, NY",
+                description: "Circle the stunning glacial lakes on this peaceful nature trail.",
+                groupSize: "8-15",
+                season: "spring",
+                icon: "🏞️",
+                badge: "Family"
+            },
+            {
+                id: 5,
+                title: "Chittenango Falls Adventure",
+                region: "central-ny",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Cazenovia, NY",
+                description: "Trek to one of New York's highest waterfalls in this gorge setting.",
+                groupSize: "6-12",
+                season: "spring",
+                icon: "💦",
+                badge: "Scenic"
+            },
+            {
+                id: 6,
+                title: "Oneida Lake Fishing",
+                region: "central-ny",
+                activity: "water",
+                difficulty: "easy",
+                location: "Sylvan Beach, NY",
+                description: "Experience excellent fishing on New York's largest lake entirely within the state.",
+                groupSize: "4-8",
+                season: "summer",
+                icon: "🎣",
+                badge: "Popular"
+            },
+            {
+                id: 7,
+                title: "Allegany State Park Hiking",
+                region: "chautauqua-allegheny",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Salamanca, NY",
+                description: "Explore 65,000 acres of wilderness in New York's largest state park.",
+                groupSize: "8-12",
+                season: "fall",
+                icon: "🌲",
+                badge: "Wild"
+            },
+            {
+                id: 8,
+                title: "Chautauqua Lake Boating",
+                region: "chautauqua-allegheny",
+                activity: "water",
+                difficulty: "easy",
+                location: "Chautauqua, NY",
+                description: "Sail or paddle across this beautiful lake surrounded by rolling hills.",
+                groupSize: "6-10",
+                season: "summer",
+                icon: "⛵",
+                badge: "Relaxing"
+            },
+            {
+                id: 9,
+                title: "Rock City Park Exploration",
+                region: "chautauqua-allegheny",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Olean, NY",
+                description: "Discover massive rock formations and scenic overlooks in this unique park.",
+                groupSize: "8-15",
+                season: "fall",
+                icon: "🪨",
+                badge: "Unique"
+            },
+            {
+                id: 10,
+                title: "Watkins Glen Gorge Trail",
+                region: "finger-lakes",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Watkins Glen, NY",
+                description: "Walk through a stunning gorge with 19 waterfalls along the trail.",
+                groupSize: "10-20",
+                season: "summer",
+                icon: "💦",
+                badge: "Popular"
+            },
+            {
+                id: 11,
+                title: "Seneca Lake Wine Trail",
+                region: "finger-lakes",
+                activity: "biking",
+                difficulty: "easy",
+                location: "Geneva, NY",
+                description: "Bike along the scenic shores of the deepest Finger Lake.",
+                groupSize: "8-15",
+                season: "fall",
+                icon: "🚴",
+                badge: "Scenic"
+            },
+            {
+                id: 12,
+                title: "Taughannock Falls Hike",
+                region: "finger-lakes",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Trumansburg, NY",
+                description: "Visit New York's tallest single-drop waterfall at 215 feet.",
+                groupSize: "8-15",
+                season: "spring",
+                icon: "🏞️",
+                badge: "Epic"
+            },
+            {
+                id: 13,
+                title: "Letchworth State Park Trails",
+                region: "finger-lakes",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Castile, NY",
+                description: "Explore the 'Grand Canyon of the East' with spectacular gorge views.",
+                groupSize: "10-15",
+                season: "fall",
+                icon: "⛰️",
+                badge: "Grand"
+            },
+            {
+                id: 14,
+                title: "Niagara Falls Adventure",
+                region: "greater-niagara",
+                activity: "water",
+                difficulty: "easy",
+                location: "Niagara Falls, NY",
+                description: "Experience the power and beauty of one of the world's most famous waterfalls.",
+                groupSize: "15-30",
+                season: "summer",
+                icon: "💦",
+                badge: "Iconic"
+            },
+            {
+                id: 15,
+                title: "Niagara Gorge Hiking",
+                region: "greater-niagara",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Lewiston, NY",
+                description: "Trek through the dramatic Niagara Gorge with thrilling whirlpool views.",
+                groupSize: "8-12",
+                season: "fall",
+                icon: "🌊",
+                badge: "Thrilling"
+            },
+            {
+                id: 16,
+                title: "Devil's Hole State Park Trail",
+                region: "greater-niagara",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Niagara Falls, NY",
+                description: "Descend into a gorge wilderness with rapids and forest trails.",
+                groupSize: "6-12",
+                season: "spring",
+                icon: "🏞️",
+                badge: "Adventure"
+            },
+            {
+                id: 17,
+                title: "Bear Mountain Challenge",
+                region: "hudson-valley",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Bear Mountain, NY",
+                description: "Climb to the summit for panoramic views of the Hudson Valley.",
+                groupSize: "8-12",
+                season: "fall",
+                icon: "🏔️",
+                badge: "Challenge"
+            },
+            {
+                id: 18,
+                title: "Storm King Mountain Trek",
+                region: "hudson-valley",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Cornwall, NY",
+                description: "Scale this iconic peak overlooking the Hudson River highlands.",
+                groupSize: "6-10",
+                season: "fall",
+                icon: "⛰️",
+                badge: "Epic"
+            },
+            {
+                id: 19,
+                title: "Walkway Over the Hudson",
+                region: "hudson-valley",
+                activity: "biking",
+                difficulty: "easy",
+                location: "Poughkeepsie, NY",
+                description: "Walk or bike across the world's longest elevated pedestrian bridge.",
+                groupSize: "10-20",
+                season: "spring",
+                icon: "🌉",
+                badge: "Unique"
+            },
+            {
+                id: 20,
+                title: "Hudson River Cruise",
+                region: "hudson-valley",
+                activity: "water",
+                difficulty: "easy",
+                location: "Kingston, NY",
+                description: "Sail the historic Hudson River surrounded by mountain scenery.",
+                groupSize: "20-40",
+                season: "summer",
+                icon: "🚢",
+                badge: "Scenic"
+            },
+            {
+                id: 21,
+                title: "Fire Island Beach Hike",
+                region: "long-island",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Fire Island, NY",
+                description: "Walk miles of pristine beaches on this car-free barrier island.",
+                groupSize: "8-15",
+                season: "summer",
+                icon: "🏖️",
+                badge: "Beach"
+            },
+            {
+                id: 22,
+                title: "Montauk Point Exploration",
+                region: "long-island",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Montauk, NY",
+                description: "Explore the dramatic coastal bluffs at Long Island's eastern tip.",
+                groupSize: "10-15",
+                season: "spring",
+                icon: "🗼",
+                badge: "Coastal"
+            },
+            {
+                id: 23,
+                title: "Jones Beach Kayaking",
+                region: "long-island",
+                activity: "water",
+                difficulty: "moderate",
+                location: "Wantagh, NY",
+                description: "Paddle through protected bays and coastal waterways.",
+                groupSize: "6-12",
+                season: "summer",
+                icon: "🚣",
+                badge: "Ocean"
+            },
+            {
+                id: 24,
+                title: "Central Park Loop",
+                region: "new-york-city",
+                activity: "biking",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Bike through America's most famous urban park with iconic landmarks.",
+                groupSize: "10-20",
+                season: "spring",
+                icon: "🚴",
+                badge: "Urban"
+            },
+            {
+                id: 25,
+                title: "Brooklyn Bridge Walk",
+                region: "new-york-city",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Brooklyn, NY",
+                description: "Cross the historic Brooklyn Bridge with stunning city skyline views.",
+                groupSize: "15-30",
+                season: "fall",
+                icon: "🌉",
+                badge: "Iconic"
+            },
+            {
+                id: 26,
+                title: "Hudson River Greenway",
+                region: "new-york-city",
+                activity: "biking",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Ride the waterfront path from Battery Park to the George Washington Bridge.",
+                groupSize: "10-20",
+                season: "summer",
+                icon: "🚴",
+                badge: "Waterfront"
+            },
+            {
+                id: 27,
+                title: "Wellesley Island Hiking",
+                region: "thousand-islands",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Fineview, NY",
+                description: "Explore trails through forests and along the St. Lawrence River.",
+                groupSize: "8-15",
+                season: "summer",
+                icon: "🌲",
+                badge: "Island"
+            },
+            {
+                id: 28,
+                title: "Thousand Islands Kayaking",
+                region: "thousand-islands",
+                activity: "water",
+                difficulty: "moderate",
+                location: "Clayton, NY",
+                description: "Paddle among the beautiful 1,864 islands of the St. Lawrence River.",
+                groupSize: "6-12",
+                season: "summer",
+                icon: "🚣",
+                badge: "Scenic"
+            },
+            {
+                id: 29,
+                title: "Boldt Castle Island Tour",
+                region: "thousand-islands",
+                activity: "water",
+                difficulty: "easy",
+                location: "Alexandria Bay, NY",
+                description: "Boat to Heart Island and explore the magnificent Boldt Castle.",
+                groupSize: "15-25",
+                season: "summer",
+                icon: "🏰",
+                badge: "Historic"
+            },
+            {
+                id: 30,
+                title: "Robert Moses State Park Trail",
+                region: "thousand-islands",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Massena, NY",
+                description: "Walk nature trails with views of the St. Lawrence Seaway.",
+                groupSize: "8-15",
+                season: "spring",
+                icon: "🌳",
+                badge: "Nature"
+            },
+            {
+                id: 31,
+                title: "Whiteface Mountain Skiing",
+                region: "capital-saratoga",
+                activity: "skiing",
+                difficulty: "hard",
+                location: "Wilmington, NY",
+                description: "Ski the mountain that hosted the 1980 Winter Olympics with stunning vertical drops.",
+                groupSize: "8-15",
+                season: "winter",
+                icon: "⛷️",
+                badge: "Olympic"
+            },
+            {
+                id: 32,
+                title: "Lake Placid Toboggan Run",
+                region: "capital-saratoga",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Lake Placid, NY",
+                description: "Speed down an Olympic-size toboggan chute for winter thrills.",
+                groupSize: "4-10",
+                season: "winter",
+                icon: "🛷",
+                badge: "Fun"
+            },
+            {
+                id: 33,
+                title: "Adirondack Snowshoeing",
+                region: "capital-saratoga",
+                activity: "winter",
+                difficulty: "moderate",
+                location: "Lake Placid, NY",
+                description: "Trek through pristine winter wilderness on snowshoes.",
+                groupSize: "6-12",
+                season: "winter",
+                icon: "🥾",
+                badge: "Peaceful"
+            },
+            {
+                id: 34,
+                title: "Toggenburg Mountain Skiing",
+                region: "central-ny",
+                activity: "skiing",
+                difficulty: "moderate",
+                location: "Fabius, NY",
+                description: "Family-friendly ski resort with varied terrain for all skill levels.",
+                groupSize: "8-20",
+                season: "winter",
+                icon: "⛷️",
+                badge: "Family"
+            },
+            {
+                id: 35,
+                title: "Green Lakes Winter Hiking",
+                region: "central-ny",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Fayetteville, NY",
+                description: "Experience the glacial lakes in their frozen winter beauty.",
+                groupSize: "8-15",
+                season: "winter",
+                icon: "❄️",
+                badge: "Scenic"
+            },
+            {
+                id: 36,
+                title: "Holiday Valley Skiing",
+                region: "chautauqua-allegheny",
+                activity: "skiing",
+                difficulty: "moderate",
+                location: "Ellicottville, NY",
+                description: "Western NY's premier ski resort with extensive trails and terrain parks.",
+                groupSize: "10-20",
+                season: "winter",
+                icon: "🎿",
+                badge: "Popular"
+            },
+            {
+                id: 37,
+                title: "Allegany Winter Camping",
+                region: "chautauqua-allegheny",
+                activity: "winter",
+                difficulty: "hard",
+                location: "Salamanca, NY",
+                description: "Experience backcountry winter camping in the snow-covered wilderness.",
+                groupSize: "4-8",
+                season: "winter",
+                icon: "⛺",
+                badge: "Adventure"
+            },
+            {
+                id: 38,
+                title: "Bristol Mountain Skiing",
+                region: "finger-lakes",
+                activity: "skiing",
+                difficulty: "moderate",
+                location: "Canandaigua, NY",
+                description: "Ski with panoramic views overlooking the Finger Lakes region.",
+                groupSize: "10-20",
+                season: "winter",
+                icon: "⛷️",
+                badge: "Views"
+            },
+            {
+                id: 39,
+                title: "Watkins Glen Ice Climbing",
+                region: "finger-lakes",
+                activity: "winter",
+                difficulty: "expert",
+                location: "Watkins Glen, NY",
+                description: "Scale frozen waterfalls in the gorge for an extreme winter challenge.",
+                groupSize: "4-6",
+                season: "winter",
+                icon: "🧗",
+                badge: "Extreme"
+            },
+            {
+                id: 40,
+                title: "Letchworth Winter Photography",
+                region: "finger-lakes",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Castile, NY",
+                description: "Capture the Grand Canyon of the East transformed by snow and ice.",
+                groupSize: "6-12",
+                season: "winter",
+                icon: "📸",
+                badge: "Photo"
+            },
+            {
+                id: 41,
+                title: "Kiss Bridge Snowshoeing",
+                region: "greater-niagara",
+                activity: "winter",
+                difficulty: "moderate",
+                location: "Allegany State Park, NY",
+                description: "Snowshoe through winter forests to historic covered bridges.",
+                groupSize: "8-12",
+                season: "winter",
+                icon: "🥾",
+                badge: "Historic"
+            },
+            {
+                id: 42,
+                title: "Winter Festival at Niagara",
+                region: "greater-niagara",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Niagara Falls, NY",
+                description: "Experience the falls surrounded by winter ice formations and lights.",
+                groupSize: "15-30",
+                season: "winter",
+                icon: "🎆",
+                badge: "Festival"
+            },
+            {
+                id: 43,
+                title: "Hunter Mountain Skiing",
+                region: "hudson-valley",
+                activity: "skiing",
+                difficulty: "hard",
+                location: "Hunter, NY",
+                description: "Tackle challenging slopes at the Catskills' highest ski resort.",
+                groupSize: "8-15",
+                season: "winter",
+                icon: "⛷️",
+                badge: "Challenge"
+            },
+            {
+                id: 44,
+                title: "Belleayre Mountain Skiing",
+                region: "hudson-valley",
+                activity: "skiing",
+                difficulty: "moderate",
+                location: "Pine Hill, NY",
+                description: "Enjoy family-friendly skiing in the heart of the Catskills.",
+                groupSize: "10-20",
+                season: "winter",
+                icon: "🎿",
+                badge: "Family"
+            },
+            {
+                id: 45,
+                title: "Bear Mountain Ice Skating",
+                region: "hudson-valley",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Bear Mountain, NY",
+                description: "Glide on outdoor ice with mountain views in this scenic setting.",
+                groupSize: "10-25",
+                season: "winter",
+                icon: "⛸️",
+                badge: "Classic"
+            },
+            {
+                id: 46,
+                title: "Fire Island Winter Beach Walk",
+                region: "long-island",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Fire Island, NY",
+                description: "Experience the serene beauty of winter beaches with fewer crowds.",
+                groupSize: "6-12",
+                season: "winter",
+                icon: "🏖️",
+                badge: "Peaceful"
+            },
+            {
+                id: 47,
+                title: "Montauk Winter Surfing",
+                region: "long-island",
+                activity: "winter",
+                difficulty: "hard",
+                location: "Montauk, NY",
+                description: "Brave the winter waves for an intense cold-water surfing experience.",
+                groupSize: "4-8",
+                season: "winter",
+                icon: "🏄",
+                badge: "Extreme"
+            },
+            {
+                id: 48,
+                title: "Central Park Winter Walk",
+                region: "new-york-city",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Stroll through the park's winter wonderland after fresh snowfall.",
+                groupSize: "10-20",
+                season: "winter",
+                icon: "🌨️",
+                badge: "Urban"
+            },
+            {
+                id: 49,
+                title: "Rockefeller Center Ice Skating",
+                region: "new-york-city",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Skate at NYC's most iconic rink beneath the famous Christmas tree.",
+                groupSize: "10-30",
+                season: "winter",
+                icon: "⛸️",
+                badge: "Iconic"
+            },
+            {
+                id: 50,
+                title: "Bryant Park Winter Village",
+                region: "new-york-city",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Enjoy ice skating and holiday market in this festive urban setting.",
+                groupSize: "10-25",
+                season: "winter",
+                icon: "🎄",
+                badge: "Festive"
+            },
+            {
+                id: 51,
+                title: "Wellesley Island Snowmobiling",
+                region: "thousand-islands",
+                activity: "winter",
+                difficulty: "moderate",
+                location: "Fineview, NY",
+                description: "Speed through snowy trails on guided snowmobile tours.",
+                groupSize: "4-10",
+                season: "winter",
+                icon: "🏍️",
+                badge: "Thrilling"
+            },
+            {
+                id: 52,
+                title: "St. Lawrence River Ice Fishing",
+                region: "thousand-islands",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Clayton, NY",
+                description: "Try your luck ice fishing on the frozen St. Lawrence River.",
+                groupSize: "4-12",
+                season: "winter",
+                icon: "🎣",
+                badge: "Classic"
+            },
+            {
+                id: 53,
+                title: "Thousand Islands Snowshoeing",
+                region: "thousand-islands",
+                activity: "winter",
+                difficulty: "moderate",
+                location: "Alexandria Bay, NY",
+                description: "Explore winter trails through snow-covered island landscapes.",
+                groupSize: "6-12",
+                season: "winter",
+                icon: "🥾",
+                badge: "Nature"
+            }
+        ];
+
+        // localStorage functions
+        function getSavedAdventures() {
+            const saved = localStorage.getItem('savedAdventures');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function removeFromSaved(id) {
+            const saved = getSavedAdventures();
+            const filtered = saved.filter(savedId => savedId !== id);
+            localStorage.setItem('savedAdventures', JSON.stringify(filtered));
+        }
+
+        // Calculate stats
+        function calculateStats() {
+            const savedIds = getSavedAdventures();
+            const savedAdventures = adventures.filter(a => savedIds.includes(a.id));
+            
+            const uniqueRegions = new Set(savedAdventures.map(a => a.region)).size;
+            const uniqueActivities = new Set(savedAdventures.map(a => a.activity)).size;
+            
+            document.getElementById('totalSaved').textContent = savedAdventures.length;
+            document.getElementById('uniqueRegions').textContent = uniqueRegions;
+            document.getElementById('uniqueActivities').textContent = uniqueActivities;
+            document.getElementById('savedCount').textContent = savedAdventures.length;
+        }
+
+        // Render saved adventures
+        function renderSavedAdventures() {
+            const savedIds = getSavedAdventures();
+            const savedAdventures = adventures.filter(a => savedIds.includes(a.id));
+            
+            const grid = document.getElementById('adventureGrid');
+            const emptyState = document.getElementById('emptyState');
+            const resultsHeader = document.getElementById('resultsHeader');
+            const resultCount = document.getElementById('resultCount');
+
+            if (savedAdventures.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                resultsHeader.style.display = 'none';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            resultsHeader.style.display = 'flex';
+            resultCount.textContent = savedAdventures.length;
+
+            grid.innerHTML = savedAdventures.map(adventure => `
+                <div class="adventure-card">
+                    <div class="adventure-image">
+                        ${adventure.icon}
+                        <div class="adventure-badge">${adventure.badge}</div>
+                    </div>
+                    <div class="adventure-content">
+                        <div class="adventure-location">
+                            📍 ${adventure.location}
+                        </div>
+                        <h3 class="adventure-title">${adventure.title}</h3>
+                        <p class="adventure-description">${adventure.description}</p>
+                        
+                        <div class="adventure-details">
+                            <div class="detail-item">
+                                <div class="detail-icon">👥</div>
+                                <span class="detail-label">Group Size</span>
+                                <div class="detail-value">${adventure.groupSize}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-icon">💪</div>
+                                <span class="detail-label">Level</span>
+                                <div class="detail-value">${adventure.difficulty}</div>
+                            </div>
+                        </div>
+
+                        <div class="adventure-footer">
+                            <div class="adventure-meta">
+                                <span class="meta-badge">🍂 ${adventure.season}</span>
+                                <span class="meta-badge">🎯 ${adventure.activity}</span>
+                            </div>
+                            <button class="btn-remove" onclick="removeAdventure(${adventure.id}, '${adventure.title}')">Remove</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove adventure
+        function removeAdventure(id, title) {
+            if (confirm(`Remove "${title}" from your saved adventures?`)) {
+                removeFromSaved(id);
+                showNotification(`Removed "${title}" from saved adventures`, true);
+                renderSavedAdventures();
+                calculateStats();
+            }
+        }
+
+        // Clear all saved
+        function clearAllSaved() {
+            const count = getSavedAdventures().length;
+            
+            if (count === 0) return;
+            
+            if (confirm(`Are you sure you want to remove all ${count} saved adventures?`)) {
+                localStorage.removeItem('savedAdventures');
+                showNotification(`Cleared all saved adventures`, true);
+                renderSavedAdventures();
+                calculateStats();
+            }
+        }
+
+        // Show notification
+        function showNotification(message, isRemove = false) {
+            const notification = document.createElement('div');
+            notification.className = isRemove ? 'save-notification remove' : 'save-notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateStats();
+            renderSavedAdventures();
+        });
+    </script>
+</body>
+</html>

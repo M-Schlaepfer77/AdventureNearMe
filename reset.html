@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - AdventureHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="security.js"></script>
+    <script src="auth.js"></script>
+</head>
+<body class="auth-page login-page">
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo">AdventuresNearMe</a>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <ul id="mobileMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="location.html">Adventures</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="saved.html">My Saved</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Reset Password Form -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Request Reset -->
+            <div id="requestResetSection">
+                <div class="auth-header">
+                    <h1>🔐 Reset Password</h1>
+                    <p>Enter your email to receive reset instructions</p>
+                </div>
+
+                <form id="requestResetForm" onsubmit="handleRequestReset(event)">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required autocomplete="email">
+                        <div class="error-message" id="emailError"></div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="requestBtn">Send Reset Link</button>
+                </form>
+
+                <div class="auth-footer">
+                    Remember your password? <a href="login.html">Login here</a>
+                </div>
+            </div>
+
+            <!-- Reset With Token (Demo Only) -->
+            <div id="resetTokenSection" style="display: none;">
+                <div class="auth-header">
+                    <h1>🔑 Create New Password</h1>
+                    <p>Enter your new password below</p>
+                </div>
+
+                <div class="demo-info">
+                    <strong>🧪 Demo Mode:</strong>
+                    In production, you would receive this link via email. For demo purposes, the reset token is shown above.
+                </div>
+
+                <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                    <input type="hidden" id="resetToken" name="resetToken">
+
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" required oninput="checkPasswordStrength()">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="strengthBar"></div>
+                        </div>
+                        <div class="password-strength-text" id="strengthText"></div>
+                        <div class="error-message" id="newPasswordError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        <div class="error-message" id="confirmPasswordError"></div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="resetBtn">Reset Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check password strength
+        function checkPasswordStrength() {
+            const password = document.getElementById('newPassword').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+
+            if (password.length === 0) {
+                strengthBar.className = 'password-strength-bar';
+                strengthText.textContent = '';
+                return;
+            }
+
+            const validation = window.SecurityManager.validatePasswordStrength(password);
+            
+            strengthBar.className = 'password-strength-bar';
+            
+            if (validation.strength <= 2) {
+                strengthBar.classList.add('weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.style.color = '#dc3545';
+            } else if (validation.strength <= 3) {
+                strengthBar.classList.add('medium');
+                strengthText.textContent = 'Medium password';
+                strengthText.style.color = '#ffc107';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.style.color = '#28a745';
+            }
+        }
+
+        // Handle request reset
+        async function handleRequestReset(event) {
+            event.preventDefault();
+
+            const requestBtn = document.getElementById('requestBtn');
+            requestBtn.disabled = true;
+            requestBtn.textContent = 'Sending...';
+
+            const email = document.getElementById('email').value.trim();
+
+            const result = await window.AuthManager.requestPasswordReset(email);
+
+            requestBtn.disabled = false;
+            requestBtn.textContent = 'Send Reset Link';
+
+            if (result.success) {
+                showNotification(result.message, false);
+                
+                // Show token section for demo
+                if (result.resetToken) {
+                    document.getElementById('requestResetSection').style.display = 'none';
+                    document.getElementById('resetTokenSection').style.display = 'block';
+                    document.getElementById('resetToken').value = result.resetToken;
+                    
+                    showNotification('Demo: Reset token generated. In production, this would be sent via email.', false);
+                    console.log('Reset URL: ' + window.location.origin + '/reset-password.html?token=' + result.resetToken);
+                }
+            } else {
+                showNotification(result.message, true);
+            }
+        }
+
+        // Handle reset password
+        async function handleResetPassword(event) {
+            event.preventDefault();
+
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.disabled = true;
+            resetBtn.textContent = 'Resetting...';
+
+            // Reset errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+
+            const token = document.getElementById('resetToken').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate passwords match
+            if (newPassword !== confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = 'Passwords do not match';
+                document.getElementById('confirmPasswordError').classList.add('show');
+                resetBtn.disabled = false;
+                resetBtn.textContent = 'Reset Password';
+                return;
+            }
+
+            const result = await window.AuthManager.resetPassword(token, newPassword);
+
+            resetBtn.disabled = false;
+            resetBtn.textContent = 'Reset Password';
+
+            if (result.success) {
+                showNotification('Password reset successfully! Redirecting to login...', false);
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                result.errors.forEach(error => {
+                    showNotification(error, true);
+                    document.getElementById('newPasswordError').textContent = error;
+                    document.getElementById('newPasswordError').classList.add('show');
+                });
+            }
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Check for token in URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (token) {
+                // Show reset form
+                document.getElementById('requestResetSection').style.display = 'none';
+                document.getElementById('resetTokenSection').style.display = 'block';
+                document.getElementById('resetToken').value = token;
+            }
+        });
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - AdventureHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="security.js"></script>
+    <script src="auth.js"></script>
+</head>
+<body class="auth-page">
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo">AdventuresNearMe</a>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <ul id="mobileMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="location.html">Adventures</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="saved.html">My Saved</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Sign Up Form -->
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>🏔️ Create Account</h1>
+                <p>Join the adventure community</p>
+            </div>
+
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required autocomplete="name">
+                    <div class="error-message" id="fullNameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                    <div class="error-message" id="emailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="new-password" oninput="checkPasswordStrength()">
+                    <div class="password-strength">
+                        <div class="password-strength-bar" id="strengthBar"></div>
+                    </div>
+                    <div class="password-strength-text" id="strengthText"></div>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password">
+                    <div class="error-message" id="confirmPasswordError"></div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree to the Terms & Conditions</label>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check password strength
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+
+            if (password.length === 0) {
+                strengthBar.className = 'password-strength-bar';
+                strengthText.textContent = '';
+                return;
+            }
+
+            const validation = window.SecurityManager.validatePasswordStrength(password);
+            
+            strengthBar.className = 'password-strength-bar';
+            
+            if (validation.strength <= 2) {
+                strengthBar.classList.add('weak');
+                strengthText.textContent = 'Weak password';
+                strengthText.style.color = '#dc3545';
+            } else if (validation.strength <= 3) {
+                strengthBar.classList.add('medium');
+                strengthText.textContent = 'Medium password';
+                strengthText.style.color = '#ffc107';
+            } else {
+                strengthBar.classList.add('strong');
+                strengthText.textContent = 'Strong password';
+                strengthText.style.color = '#28a745';
+            }
+        }
+
+        // Handle signup
+        async function handleSignup(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+
+            // Reset errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+
+            // Get form values
+            const userData = {
+                fullName: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value,
+                terms: document.getElementById('terms').checked
+            };
+
+            // Validate terms
+            if (!userData.terms) {
+                showNotification('Please accept the Terms & Conditions', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                return;
+            }
+
+            // Register user
+            const result = await window.AuthManager.register(userData);
+
+            if (!result.success) {
+                // Show errors
+                result.errors.forEach(error => {
+                    if (error.includes('name')) {
+                        showError('fullNameError', error);
+                    } else if (error.includes('email') || error.includes('Email')) {
+                        showError('emailError', error);
+                    } else if (error.includes('password') || error.includes('Password')) {
+                        showError('passwordError', error);
+                    } else if (error.includes('match')) {
+                        showError('confirmPasswordError', error);
+                    } else {
+                        showNotification(error, true);
+                    }
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                return;
+            }
+
+            // Success
+            showNotification('Account created successfully! Redirecting...', false);
+
+            // Redirect to adventures page
+            setTimeout(() => {
+                window.location.href = 'location.html';
+            }, 2000);
+        }
+
+        // Show error message
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            const inputId = elementId.replace('Error', '');
+            const inputEl = document.getElementById(inputId);
+            
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            inputEl.classList.add('error');
+        }
+
+        // Show notification
+        function showNotification(message, isError = false) {
+            const notification = document.createElement('div');
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AuthManager.isAuthenticated()) {
+                const currentUser = window.AuthManager.getCurrentUser();
+                showNotification('You are already logged in. Redirecting...', false);
+                setTimeout(() => {
+                    window.location.href = 'location.html';
+                }, 2000);
+            }
+        });
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
+        }
+    </script>
+</body>
+</html>
