@@ -211,20 +211,21 @@
         </div>
     </footer>
     <script>
-          function toggleMobileMenu() {
-        const menu = document.getElementById('mobileMenu');
-        menu.classList.toggle('mobile-open');
-    }
-
-    // Close mobile menu when clicking outside
-    document.addEventListener('click', function(event) {
-        const nav = document.querySelector('nav');
-        const menu = document.getElementById('mobileMenu');
-        
-        if (!nav.contains(event.target) && menu.classList.contains('mobile-open')) {
-            menu.classList.remove('mobile-open');
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
         }
-    });
+    
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const nav = document.querySelector('nav');
+            const menu = document.getElementById('mobileMenu');
+            
+            if (!nav.contains(event.target) && menu.classList.contains('mobile-open')) {
+                menu.classList.remove('mobile-open');
+            }
+        });
+    </script>
     </script>
 </body>
 </html>
