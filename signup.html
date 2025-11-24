@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - AdventureHub</title>
+    <title>Sign Up - AdventureNearMe</title>
     <link rel="stylesheet" href="styles.css">
     <script src="security.js"></script>
     <script src="auth.js"></script>
@@ -12,7 +12,7 @@
     <!-- Header -->
     <header>
         <nav>
-            <a href="index.html" class="logo">AdventuresNearMe</a>
+            <a href="#" class="logo"><img src="images/adventure (2).png" height="100px" width="100px"></a>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
             <ul id="mobileMenu">
                 <li><a href="index.html">Home</a></li>
@@ -168,7 +168,7 @@
 
             // Redirect to adventures page
             setTimeout(() => {
-                window.location.href = 'location.html';
+                window.location.href = 'dashboard.html';
             }, 2000);
         }
 
@@ -205,7 +205,7 @@
                 showNotification('You are already logged in. Redirecting...', false);
                 setTimeout(() => {
                     window.location.href = 'location.html';
-                }, 2000);
+                }, 10000);
             }
         });
 

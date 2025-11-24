@@ -712,7 +712,7 @@ nav a.active {
 .adventure-image {
     width: 100%;
     height: 250px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgb(5, 72, 5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1365,6 +1365,279 @@ body.auth-page.login-page {
     }
 }
 
+.page-header.recommendations-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.preference-section {
+    max-width: 1200px;
+    margin: -2rem auto 3rem;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.preference-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.preference-card h2 {
+    color: #2d5f54;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preference-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.preference-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.preference-group label {
+    font-weight: 600;
+    color: #2d5f54;
+    margin-bottom: 0.5rem;
+}
+
+.preference-group select,
+.preference-group input,
+.preference-group textarea {
+    padding: 0.8rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.preference-group select:focus,
+.preference-group input:focus,
+.preference-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.preference-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.tag-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tag-btn {
+    padding: 0.5rem 1rem;
+    background: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9rem;
+}
+
+.tag-btn:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.tag-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.btn-get-recommendations {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-get-recommendations:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-get-recommendations:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-content {
+    background: white;
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 400px;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid #f0f0f0;
+    border-top: 5px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-content h3 {
+    color: #2d5f54;
+    margin-bottom: 0.5rem;
+}
+
+.loading-content p {
+    color: #666;
+}
+
+.recommendation-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    border: 3px solid transparent;
+}
+
+.recommendation-card.top-pick {
+    border-color: #ffd700;
+    position: relative;
+}
+
+.recommendation-card.top-pick::before {
+    content: "⭐ TOP PICK";
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #ffd700;
+    color: #000;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 1;
+    border-radius: 0 0 10px 0;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.ai-reason {
+    background: #f8f9ff;
+    border-left: 4px solid #667eea;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 5px;
+}
+
+.ai-reason-label {
+    font-weight: 600;
+    color: #667eea;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ai-reason-text {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.match-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #667eea;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+.recommendation h5 {
+    padding: 10 2rem 4rem;
+    max-width: 1200px;
+    margin: 10 auto;
+    text-align: right;
+}
+.recommendations-header-section {
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+    padding: 0 2rem;
+}
+
+.recommendations-header-section h2 {
+    color: #2d5f54;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommendations-header-section p {
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .preference-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-card.top-pick::before {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.8rem;
+    }
+}
 /* ===================================
    Responsive Design - Extra Small
    =================================== */

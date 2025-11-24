@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recommendations - AdventureNearMe</title>
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo"><img src="images/adventure (2).png" height="100px" width="100px"></a>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <ul id="mobileMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="location.html">Adventures</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="saved.html">My Saved (<span id="savedCount">0</span>)</a></li>
+                <li><a href="recommendations.html" class="active">AI Picks</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header recommendations-header">
+        <h1>🤖 AI-Powered Recommendations</h1>
+        <p>Tell us what you're looking for, and Claude will find your perfect adventures</p>
+    </div>
+
+    <!-- Preferences Section -->
+    <div class="preference-section">
+        <div class="preference-card">
+            <h2>🎯 Your Preferences</h2>
+            
+            <form id="preferencesForm">
+                <div class="preference-grid">
+                    <div class="preference-group">
+                        <label for="fitnessLevel">Fitness Level</label>
+                        <select id="fitnessLevel" name="fitnessLevel">
+                            <option value="beginner">Beginner - Just starting out</option>
+                            <option value="intermediate" selected>Intermediate - Regular activity</option>
+                            <option value="advanced">Advanced - Very active</option>
+                            <option value="expert">Expert - Professional level</option>
+                        </select>
+                    </div>
+
+                    <div class="preference-group">
+                        <label for="groupSize">Group Type</label>
+                        <select id="groupSize" name="groupSize">
+                            <option value="solo">Solo adventurer</option>
+                            <option value="couple">Couple / 2 people</option>
+                            <option value="small" selected>Small group (3-6)</option>
+                            <option value="large">Large group (7+)</option>
+                            <option value="family">Family with kids</option>
+                        </select>
+                    </div>
+
+                    <div class="preference-group">
+                        <label for="season">Preferred Season</label>
+                        <select id="season" name="season">
+                            <option value="any" selected>Any season</option>
+                            <option value="spring">Spring</option>
+                            <option value="summer">Summer</option>
+                            <option value="fall">Fall</option>
+                            <option value="winter">Winter</option>
+                        </select>
+                    </div>
+
+                    <div class="preference-group">
+                        <label for="region">Preferred Region</label>
+                        <select id="region" name="region">
+                            <option value="any" selected>Anywhere in NY</option>
+                            <option value="capital-saratoga">Capital-Saratoga</option>
+                            <option value="central-ny">Central New York</option>
+                            <option value="chautauqua-allegheny">Chautauqua-Allegheny</option>
+                            <option value="finger-lakes">Finger Lakes</option>
+                            <option value="greater-niagara">Greater Niagara</option>
+                            <option value="hudson-valley">Hudson Valley</option>
+                            <option value="long-island">Long Island</option>
+                            <option value="new-york-city">New York City</option>
+                            <option value="thousand-islands">Thousand Islands</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="preference-group" style="margin-bottom: 1.5rem;">
+                    <label>Activity Interests (select all that apply)</label>
+                    <div class="tag-selection" id="activityTags">
+                        <button type="button" class="tag-btn" data-value="hiking">🥾 Hiking</button>
+                        <button type="button" class="tag-btn" data-value="water">🚣 Water Sports</button>
+                        <button type="button" class="tag-btn" data-value="biking">🚴 Biking</button>
+                        <button type="button" class="tag-btn" data-value="climbing">🧗 Climbing</button>
+                        <button type="button" class="tag-btn" data-value="camping">⛺ Camping</button>
+                        <button type="button" class="tag-btn" data-value="skiing">⛷️ Skiing</button>
+                        <button type="button" class="tag-btn" data-value="winter">❄️ Winter Sports</button>
+                        <button type="button" class="tag-btn" data-value="scenic">📸 Scenic Views</button>
+                    </div>
+                </div>
+
+                <div class="preference-group" style="margin-bottom: 1.5rem;">
+                    <label for="additionalInfo">Tell us more (optional)</label>
+                    <textarea 
+                        id="additionalInfo" 
+                        name="additionalInfo" 
+                        placeholder="Any specific interests, limitations, or things you're hoping to experience? For example: 'I love waterfalls and photography' or 'Looking for kid-friendly activities'"></textarea>
+                </div>
+
+                <button type="submit" class="btn-get-recommendations" id="getRecommendationsBtn">
+                    🤖 Get AI Recommendations
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section" id="resultsSection" style="display: none;">
+        <div class="recommendations-header-section">
+            <h2>🎯 Your Personalized Adventures</h2>
+            <p>Based on your preferences, here are the best matches for you</p>
+        </div>
+
+        <div class="adventure-grid" id="recommendationsGrid">
+            <!-- AI recommendations will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>🤖 Claude is thinking...</h3>
+            <p>Analyzing your preferences and finding the perfect adventures for you</p>
+        </div>
+    </div>
+
+    <script>
+        // Adventure data (same as main page)
+        const adventures = [
+            {
+                id: 1,
+                title: "Adirondack High Peaks Challenge",
+                region: "capital-saratoga",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Lake Placid, NY",
+                description: "Conquer the 46 High Peaks of the Adirondacks with stunning mountain views.",
+                groupSize: "6-10",
+                season: "summer",
+                image: "🏔️",
+                badge: "Popular"
+            },
+            {
+                id: 2,
+                title: "Saratoga Spa State Park Trail",
+                region: "capital-saratoga",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Saratoga Springs, NY",
+                description: "Explore scenic trails through historic mineral springs and peaceful woodlands.",
+                groupSize: "8-15",
+                season: "spring",
+                image: "🌲",
+                badge: "Relaxing"
+            },
+            {
+                id: 3,
+                title: "Hudson River Kayaking",
+                region: "capital-saratoga",
+                activity: "water",
+                difficulty: "moderate",
+                location: "Troy, NY",
+                description: "Paddle along the historic Hudson River with beautiful shoreline views.",
+                groupSize: "6-12",
+                season: "summer",
+                image: "🚣",
+                badge: "Scenic"
+            },
+            {
+                id: 10,
+                title: "Watkins Glen Gorge Trail",
+                region: "finger-lakes",
+                activity: "hiking",
+                difficulty: "moderate",
+                location: "Watkins Glen, NY",
+                description: "Walk through a stunning gorge with 19 waterfalls along the trail.",
+                groupSize: "10-20",
+                season: "summer",
+                image: "💦",
+                badge: "Popular"
+            },
+            {
+                id: 14,
+                title: "Niagara Falls Adventure",
+                region: "greater-niagara",
+                activity: "water",
+                difficulty: "easy",
+                location: "Niagara Falls, NY",
+                description: "Experience the power and beauty of one of the world's most famous waterfalls.",
+                groupSize: "15-30",
+                season: "summer",
+                image: "💦",
+                badge: "Iconic"
+            },
+            {
+                id: 17,
+                title: "Bear Mountain Challenge",
+                region: "hudson-valley",
+                activity: "hiking",
+                difficulty: "hard",
+                location: "Bear Mountain, NY",
+                description: "Climb to the summit for panoramic views of the Hudson Valley.",
+                groupSize: "8-12",
+                season: "fall",
+                image: "🏔️",
+                badge: "Challenge"
+            },
+            {
+                id: 21,
+                title: "Fire Island Beach Hike",
+                region: "long-island",
+                activity: "hiking",
+                difficulty: "easy",
+                location: "Fire Island, NY",
+                description: "Walk miles of pristine beaches on this car-free barrier island.",
+                groupSize: "8-15",
+                season: "summer",
+                image: "🏖️",
+                badge: "Beach"
+            },
+            {
+                id: 24,
+                title: "Central Park Loop",
+                region: "new-york-city",
+                activity: "biking",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Bike through America's most famous urban park with iconic landmarks.",
+                groupSize: "10-20",
+                season: "spring",
+                image: "🚴",
+                badge: "Urban"
+            },
+            {
+                id: 31,
+                title: "Whiteface Mountain Skiing",
+                region: "capital-saratoga",
+                activity: "skiing",
+                difficulty: "hard",
+                location: "Wilmington, NY",
+                description: "Ski the mountain that hosted the 1980 Winter Olympics with stunning vertical drops.",
+                groupSize: "8-15",
+                season: "winter",
+                image: "⛷️",
+                badge: "Olympic"
+            },
+            {
+                id: 49,
+                title: "Rockefeller Center Ice Skating",
+                region: "new-york-city",
+                activity: "winter",
+                difficulty: "easy",
+                location: "Manhattan, NY",
+                description: "Skate at NYC's most iconic rink beneath the famous Christmas tree.",
+                groupSize: "10-30",
+                season: "winter",
+                image: "⛸️",
+                badge: "Iconic"
+            }
+        ];
+
+        let selectedActivities = [];
+
+        // Handle activity tag selection
+        document.querySelectorAll('.tag-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.classList.toggle('active');
+                const value = this.dataset.value;
+                
+                if (this.classList.contains('active')) {
+                    if (!selectedActivities.includes(value)) {
+                        selectedActivities.push(value);
+                    }
+                } else {
+                    selectedActivities = selectedActivities.filter(a => a !== value);
+                }
+            });
+        });
+
+        // Update saved count
+        function updateSavedCount() {
+            const saved = JSON.parse(localStorage.getItem('savedAdventures') || '[]');
+            document.getElementById('savedCount').textContent = saved.length;
+        }
+
+        // Handle form submission
+        document.getElementById('preferencesForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const preferences = {
+                fitnessLevel: document.getElementById('fitnessLevel').value,
+                groupSize: document.getElementById('groupSize').value,
+                season: document.getElementById('season').value,
+                region: document.getElementById('region').value,
+                activities: selectedActivities,
+                additionalInfo: document.getElementById('additionalInfo').value
+            };
+
+            await getAIRecommendations(preferences);
+        });
+
+        // Get AI recommendations
+        async function getAIRecommendations(preferences) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const resultsSection = document.getElementById('resultsSection');
+            const btn = document.getElementById('getRecommendationsBtn');
+            
+            // Show loading
+            loadingOverlay.classList.add('show');
+            btn.disabled = true;
+
+            try {
+                const prompt = `You are an outdoor adventure recommendation expert. Based on the user's preferences, recommend the TOP 5 adventures from this list.
+
+USER PREFERENCES:
+- Fitness Level: ${preferences.fitnessLevel}
+- Group Type: ${preferences.groupSize}
+- Preferred Season: ${preferences.season}
+- Preferred Region: ${preferences.region}
+- Activity Interests: ${preferences.activities.join(', ') || 'No specific preferences'}
+- Additional Info: ${preferences.additionalInfo || 'None'}
+
+AVAILABLE ADVENTURES:
+${JSON.stringify(adventures, null, 2)}
+
+INSTRUCTIONS:
+1. Select the TOP 5 adventures that best match the user's preferences
+2. Rank them from best match (#1) to 5th best match (#5)
+3. For each recommendation, provide a personalized reason (2-3 sentences) explaining WHY it's a good match for this specific user
+4. Consider fitness level when matching difficulty
+5. Consider group type when matching group size
+6. Prioritize their season and region preferences if specified
+7. Consider their activity interests
+
+Return ONLY valid JSON in this EXACT format (no other text):
+[
+  {
+    "id": 1,
+    "reason": "Personalized explanation here",
+    "matchScore": 95
+  },
+  {
+    "id": 14,
+    "reason": "Another personalized explanation",
+    "matchScore": 90
+  }
+]
+
+The matchScore should be 1-100 indicating how well it matches their preferences.`;
+
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 2000,
+                        messages: [{ role: "user", content: prompt }]
+                    })
+                });
+
+                const data = await response.json();
+                let responseText = data.content[0].text;
+                
+                // Strip markdown code blocks if present
+                responseText = responseText.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+                
+                const recommendations = JSON.parse(responseText);
+                
+                displayRecommendations(recommendations);
+                
+                // Hide loading, show results
+                loadingOverlay.classList.remove('show');
+                resultsSection.style.display = 'block';
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error getting recommendations:', error);
+                loadingOverlay.classList.remove('show');
+                alert('Sorry, there was an error getting recommendations. Please try again.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Display recommendations
+        function displayRecommendations(recommendations) {
+            const grid = document.getElementById('recommendationsGrid');
+            
+            const html = recommendations.map((rec, index) => {
+                const adventure = adventures.find(a => a.id === rec.id);
+                if (!adventure) return '';
+                
+                const isTopPick = index === 0;
+                const saved = getSavedAdventures();
+                const isSaved = saved.includes(adventure.id);
+                
+                return `
+                    <div class="recommendation-card ${isTopPick ? 'top-pick' : ''}">
+                        <div class="adventure-image">
+                            ${adventure.icon}
+                            <div class="adventure-badge">${adventure.badge}</div>
+                        </div>
+                        <div class="adventure-content">
+                            <div class="adventure-location">
+                                📍 ${adventure.location}
+                            </div>
+                            <h3 class="adventure-title">${adventure.title}</h3>
+                            <p class="adventure-description">${adventure.description}</p>
+                            
+                            <div class="ai-reason">
+                                <div class="ai-reason-label">
+                                    🤖 Why Claude Recommends This
+                                    <span class="match-score">
+                                        ${rec.matchScore}% Match
+                                    </span>
+                                </div>
+                                <div class="ai-reason-text">${rec.reason}</div>
+                            </div>
+                            
+                            <div class="adventure-details">
+                                <div class="detail-item">
+                                    <div class="detail-icon">👥</div>
+                                    <span class="detail-label">Group Size</span>
+                                    <div class="detail-value">${adventure.groupSize}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">💪</div>
+                                    <span class="detail-label">Level</span>
+                                    <div class="detail-value">${adventure.difficulty}</div>
+                                </div>
+                            </div>
+
+                            <div class="adventure-footer">
+                                <div class="adventure-meta">
+                                    <span class="meta-badge">🍂 ${adventure.season}</span>
+                                    <span class="meta-badge">🎯 ${adventure.activity}</span>
+                                </div>
+                                <button class="btn-save ${isSaved ? 'saved' : ''}" id="save-btn-${adventure.id}" onclick="saveAdventure(${adventure.id}, '${adventure.title}')">
+                                    ${isSaved ? '❤️ Saved!' : '❤️ Save'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            grid.innerHTML = html;
+        }
+
+        // localStorage functions
+        function getSavedAdventures() {
+            const saved = localStorage.getItem('savedAdventures');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function addToSaved(id) {
+            const saved = getSavedAdventures();
+            if (!saved.includes(id)) {
+                saved.push(id);
+                localStorage.setItem('savedAdventures', JSON.stringify(saved));
+            }
+        }
+
+        function removeFromSaved(id) {
+            const saved = getSavedAdventures();
+            const filtered = saved.filter(savedId => savedId !== id);
+            localStorage.setItem('savedAdventures', JSON.stringify(filtered));
+        }
+
+        // Save adventure
+        function saveAdventure(id, title) {
+            const btn = document.getElementById(`save-btn-${id}`);
+            const isSaved = btn.classList.contains('saved');
+            
+            if (isSaved) {
+                btn.classList.remove('saved');
+                btn.innerHTML = '❤️ Save';
+                removeFromSaved(id);
+                showNotification(`Removed "${title}" from saved adventures`, true);
+            } else {
+                btn.classList.add('saved');
+                btn.innerHTML = '❤️ Saved!';
+                addToSaved(id);
+                showNotification(`Saved "${title}" to your favorites!`, false);
+            }
+            
+            updateSavedCount();
+        }
+
+        // Show notification
+        function showNotification(message, isRemove = false) {
+            const notification = document.createElement('div');
+            notification.className = isRemove ? 'save-notification remove' : 'save-notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSavedCount();
+        });
+    </script>
+</body>
+</html>

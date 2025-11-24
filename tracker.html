@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Adventure Bucket List - AdventureHub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="index.html" class="logo"><img src="images/adventure (2).png" height="100px" width="100px"></a>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            <ul id="mobileMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="location.html">Adventures</a></li>
+                <li><a href="recommendations.html">AI Picks</a></li>
+                <li><a href="saved.html">Saved</a></li>
+                <li><a href="tracker.html" class="active">Tracker</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>🎯 My Adventure Bucket List</h1>
+        <p>Track your completed adventures and see your progress</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="completedCount">0</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value" id="totalCount">53</div>
+            <div class="stat-label">Total Adventures</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="progressPercent">0%</div>
+            <div class="stat-label">Progress</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value" id="achievementLevel">Beginner</div>
+            <div class="stat-label">Achievement</div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+        <div class="progress-header">
+            <h3>Overall Progress</h3>
+            <span id="progressText">0 of 53 adventures completed</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-container">
+            <div class="filter-group">
+                <label>🌍 Region</label>
+                <select id="regionFilter" onchange="applyFilters()">
+                    <option value="">All Regions</option>
+                    <option value="capital-saratoga">Capital-Saratoga</option>
+                    <option value="central-ny">Central New York</option>
+                    <option value="chautauqua-allegheny">Chautauqua-Allegheny</option>
+                    <option value="finger-lakes">Finger Lakes</option>
+                    <option value="greater-niagara">Greater Niagara</option>
+                    <option value="hudson-valley">Hudson Valley</option>
+                    <option value="long-island">Long Island</option>
+                    <option value="new-york-city">New York City</option>
+                    <option value="thousand-islands">Thousand Islands-Seaway</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>📊 Status</label>
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">All Adventures</option>
+                    <option value="completed">✅ Completed</option>
+                    <option value="pending">⏳ Not Done</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>🎯 Activity</label>
+                <select id="activityFilter" onchange="applyFilters()">
+                    <option value="">All Activities</option>
+                    <option value="hiking">Hiking</option>
+                    <option value="climbing">Rock Climbing</option>
+                    <option value="water">Water Sports</option>
+                    <option value="biking">Mountain Biking</option>
+                    <option value="camping">Camping</option>
+                    <option value="skiing">Skiing</option>
+                    <option value="winter">Winter Sports</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <button class="btn-reset" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Header -->
+    <div class="results-section">
+        <div class="results-header">
+            <div class="results-count">
+                Showing <strong id="resultCount">0</strong> adventures
+            </div>
+            <div class="results-actions">
+                <button class="btn-secondary" onclick="markAllComplete()">✅ Mark All Complete</button>
+                <button class="btn-danger" onclick="clearAllProgress()">🔄 Clear Progress</button>
+            </div>
+        </div>
+
+        <!-- Tracker Grid -->
+        <div class="tracker-grid" id="trackerGrid">
+            <!-- Adventures will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">🎯</div>
+            <h3>No adventures found</h3>
+            <p>Try adjusting your filters</p>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+    </script>
+
+    <script src="adventures-data.js"></script>
+
+    <script>
+        let filteredAdventures = [...adventures];
+
+        // LocalStorage functions
+        function getCompletedAdventures() {
+            const completed = localStorage.getItem('completedAdventures');
+            return completed ? JSON.parse(completed) : [];
+        }
+
+        function addToCompleted(id) {
+            const completed = getCompletedAdventures();
+            if (!completed.includes(id)) {
+                completed.push(id);
+                localStorage.setItem('completedAdventures', JSON.stringify(completed));
+            }
+        }
+
+        function removeFromCompleted(id) {
+            const completed = getCompletedAdventures();
+            const filtered = completed.filter(completedId => completedId !== id);
+            localStorage.setItem('completedAdventures', JSON.stringify(filtered));
+        }
+
+        function isAdventureCompleted(id) {
+            return getCompletedAdventures().includes(id);
+        }
+
+        // Toggle completion status
+        function toggleComplete(id) {
+            if (isAdventureCompleted(id)) {
+                removeFromCompleted(id);
+                showNotification('Marked as not done', false);
+            } else {
+                addToCompleted(id);
+                showNotification('Marked as completed! 🎉', false);
+            }
+            renderAdventures();
+            updateStats();
+        }
+
+        // Calculate statistics
+        function updateStats() {
+            const completed = getCompletedAdventures();
+            const total = adventures.length;
+            const completedCount = completed.length;
+            const percentage = Math.round((completedCount / total) * 100);
+
+            document.getElementById('completedCount').textContent = completedCount;
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('progressPercent').textContent = percentage + '%';
+            document.getElementById('progressText').textContent = `${completedCount} of ${total} adventures completed`;
+            document.getElementById('progressFill').style.width = percentage + '%';
+
+            // Achievement level
+            let level = 'Beginner';
+            if (completedCount >= 40) level = 'Legend';
+            else if (completedCount >= 30) level = 'Expert';
+            else if (completedCount >= 20) level = 'Advanced';
+            else if (completedCount >= 10) level = 'Intermediate';
+
+            document.getElementById('achievementLevel').textContent = level;
+        }
+
+        // Render adventures
+        function renderAdventures() {
+            const grid = document.getElementById('trackerGrid');
+            const emptyState = document.getElementById('emptyState');
+            const resultCount = document.getElementById('resultCount');
+
+            if (filteredAdventures.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                resultCount.textContent = '0';
+                return;
+            }
+
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            resultCount.textContent = filteredAdventures.length;
+
+            grid.innerHTML = filteredAdventures.map(adventure => {
+                const isCompleted = isAdventureCompleted(adventure.id);
+                
+                return `
+                    <div class="tracker-item ${isCompleted ? 'completed' : ''}">
+                        <div class="tracker-checkbox" onclick="toggleComplete(${adventure.id})">
+                            ${isCompleted ? '✅' : '☐'}
+                        </div>
+                        <div class="tracker-content">
+                            <h4 class="tracker-title">${adventure.title}</h4>
+                            <div class="tracker-meta">
+                                <span class="meta-badge">📍 ${adventure.location}</span>
+                                <span class="meta-badge">🎯 ${adventure.activity}</span>
+                                <span class="meta-badge">💪 ${adventure.difficulty}</span>
+                            </div>
+                        </div>
+                        <div class="tracker-badge">${adventure.badge}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const region = document.getElementById('regionFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const activity = document.getElementById('activityFilter').value;
+
+            filteredAdventures = adventures.filter(adventure => {
+                if (region && adventure.region !== region) return false;
+                if (activity && adventure.activity !== activity) return false;
+                
+                if (status === 'completed' && !isAdventureCompleted(adventure.id)) return false;
+                if (status === 'pending' && isAdventureCompleted(adventure.id)) return false;
+
+                return true;
+            });
+
+            renderAdventures();
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('regionFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('activityFilter').value = '';
+            filteredAdventures = [...adventures];
+            renderAdventures();
+        }
+
+        // Mark all as complete
+        function markAllComplete() {
+            if (confirm('Mark all adventures as completed?')) {
+                const allIds = adventures.map(a => a.id);
+                localStorage.setItem('completedAdventures', JSON.stringify(allIds));
+                showNotification('All adventures marked as completed! 🎉', false);
+                renderAdventures();
+                updateStats();
+            }
+        }
+
+        // Clear all progress
+        function clearAllProgress() {
+            if (confirm('Are you sure you want to clear all progress? This cannot be undone.')) {
+                localStorage.removeItem('completedAdventures');
+                showNotification('All progress cleared', true);
+                renderAdventures();
+                updateStats();
+            }
+        }
+
+        // Show notification
+        function showNotification(message, isError) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${isError ? 'error' : 'success'}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAdventures();
+            updateStats();
+        });
+    </script>
+
+    <style>
+        /* Tracker-specific styles */
+        .tracker-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tracker-item {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .tracker-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .tracker-item.completed {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+
+        .tracker-checkbox {
+            font-size: 2rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+
+        .tracker-checkbox:hover {
+            transform: scale(1.2);
+        }
+
+        .tracker-content {
+            flex: 1;
+        }
+
+        .tracker-title {
+            font-size: 1.25rem;
+            color: #2d5f54;
+            margin-bottom: 0.5rem;
+        }
+
+        .tracker-item.completed .tracker-title {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .tracker-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tracker-badge {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .progress-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-header h3 {
+            color: #2d5f54;
+            margin: 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .tracker-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .tracker-checkbox {
+                font-size: 1.5rem;
+            }
+
+            .results-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .results-actions button {
+                width: 100%;
+            }
+
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - AdventureHub</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="security.js"></script>
+    <script src="auth.js"></script>
 </head>
-<body>
+<body class="auth-page login-page">
     <!-- Header -->
     <header>
         <nav>
-            <a href="#" class="logo"><img src="images/adventure (2).png" height="100px" width="100px"></a>
-            <ul>
+            <a href="index.html" class="logo">AdventuresNearMe</a>
             <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
             <ul id="mobileMenu">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="location.html">Adventures</a></li>
-                <li><a href="aboutUs.html">About</a></li>
-                <li><a href="saved.html">My Saved</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="saved.html">Saved</a></li>
+                <li><a href="tracker.html">Tracker</a></li>
                 <li><a href="login.html" class="active">Login</a></li>
-                <li><a href="signup.html">Sign Up</a></li>
             </ul>
         </nav>
     </header>
@@ -32,33 +33,33 @@
                 <p>Login to continue your adventure</p>
             </div>
 
-            <div class="demo-info">
-                <strong>💡 Demo Mode:</strong>
-                Create an account or use any registered email to login. Your data is stored locally in your browser.
+            <div class="demo-info" id="sessionMessage" style="display: none;">
+                <strong>⚠️ Session Expired</strong>
+                Your session has timed out for security. Please login again.
             </div>
 
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required>
-                    <div class="error-message" id="emailError">Please enter a valid email address</div>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                    <div class="error-message" id="emailError"></div>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                    <div class="error-message" id="passwordError">Please enter your password</div>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                    <div class="error-message" id="passwordError"></div>
                 </div>
 
                 <div class="form-options">
                     <div class="checkbox-group">
                         <input type="checkbox" id="remember" name="remember">
-                        <label for="remember">Remember me</label>
+                        <label for="remember">Remember me (7 days)</label>
                     </div>
-                    <a href="#" class="forgot-password" onclick="handleForgotPassword(event)">Forgot password?</a>
+                    <a href="reset-password.html" class="forgot-password">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn-submit">Login</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Login</button>
             </form>
 
             <div class="divider">
@@ -73,88 +74,54 @@
 
     <script>
         // Handle login
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
 
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+
+            // Reset errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+                el.textContent = '';
+            });
+            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+
             // Get form values
-            const email = document.getElementById('email').value.trim().toLowerCase();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
 
-            // Reset errors
-            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
-            document.querySelectorAll('input').forEach(el => el.classList.remove('error'));
+            // Login
+            const result = await window.AuthManager.login(email, password, remember);
 
-            let hasError = false;
+            if (!result.success) {
+                // Show errors
+                result.errors.forEach(error => {
+                    showNotification(error, true);
+                    document.getElementById('emailError').textContent = error;
+                    document.getElementById('emailError').classList.add('show');
+                    document.getElementById('email').classList.add('error');
+                    document.getElementById('password').classList.add('error');
+                });
 
-            // Validate email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                document.getElementById('emailError').classList.add('show');
-                document.getElementById('email').classList.add('error');
-                hasError = true;
-            }
+                if (result.remainingAttempts !== undefined && result.remainingAttempts > 0) {
+                    showNotification(`${result.remainingAttempts} attempts remaining before account lock`, true);
+                }
 
-            // Validate password
-            if (password.length < 1) {
-                document.getElementById('passwordError').classList.add('show');
-                document.getElementById('password').classList.add('error');
-                hasError = true;
-            }
-
-            if (hasError) return;
-
-            // Check credentials
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.email === email && u.password === password);
-
-            if (!user) {
-                document.getElementById('emailError').textContent = 'Invalid email or password';
-                document.getElementById('emailError').classList.add('show');
-                document.getElementById('email').classList.add('error');
-                document.getElementById('password').classList.add('error');
-                showNotification('Invalid credentials. Please try again.', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
                 return;
             }
 
-            // Set current user
-            const currentUser = {
-                fullName: user.fullName,
-                email: user.email,
-                loggedInAt: new Date().toISOString(),
-                remember: remember
-            };
+            // Success
+            showNotification(`Welcome back, ${result.user.fullName}!`, false);
 
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-            // Show success message
-            showNotification(`Welcome back, ${user.fullName}!`, false);
-
-            // Redirect to adventures page
+            // Redirect to dashboard
             setTimeout(() => {
-                window.location.href = 'location.html';
+                window.location.href = 'dashboard.html';
             }, 1500);
-        }
-
-        // Handle forgot password
-        function handleForgotPassword(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            
-            if (!email) {
-                showNotification('Please enter your email address first', true);
-                return;
-            }
-
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.email === email.toLowerCase());
-
-            if (user) {
-                showNotification('Password reset link sent to your email! (Demo mode - check console)', false);
-                console.log('Password reset for:', email);
-            } else {
-                showNotification('Email not found in our system', true);
-            }
         }
 
         // Show notification
@@ -174,15 +141,27 @@
 
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', function() {
-            const currentUser = localStorage.getItem('currentUser');
-            if (currentUser) {
-                const user = JSON.parse(currentUser);
-                showNotification(`Already logged in as ${user.fullName}. Redirecting...`, false);
+            // Check for session timeout message
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('reason') === 'timeout') {
+                document.getElementById('sessionMessage').style.display = 'block';
+            }
+
+            // Check if already logged in
+            if (window.AuthManager.isAuthenticated()) {
+                const currentUser = window.AuthManager.getCurrentUser();
+                showNotification(`Already logged in as ${currentUser.fullName}. Redirecting...`, false);
                 setTimeout(() => {
-                    window.location.href = 'location.html';
+                    window.location.href = 'dashboard.html';
                 }, 2000);
             }
         });
+
+        // Toggle mobile menu
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('mobile-open');
+        }
     </script>
 </body>
 </html>
